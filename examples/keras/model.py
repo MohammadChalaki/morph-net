@@ -11,8 +11,8 @@ Implementation of MorphNetModel class.
 import os
 import tensorflow as tf
 from datetime import datetime
-from Morphnet.network_regularizers import flop_regularizer, latency_regularizer, model_size_regularizer
-from Morphnet.tools import structure_exporter
+from morph_net.network_regularizers import flop_regularizer, latency_regularizer, model_size_regularizer
+from morph_net.tools import structure_exporter
 
 
 class MorphNetModel(object):

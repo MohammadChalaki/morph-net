@@ -11,8 +11,8 @@ Implementation of MorphNetModel class.
 import os
 import tensorflow as tf
 from datetime import datetime
-from morph_net.network_regularizers import flop_regularizer, latency_regularizer, model_size_regularizer
-from morph_net.tools import structure_exporter
+from Morphnet.network_regularizers import flop_regularizer, latency_regularizer, model_size_regularizer
+from Morphnet.tools import structure_exporter
 
 
 class MorphNetModel(object):
@@ -30,7 +30,7 @@ class MorphNetModel(object):
                  morphnet_hardware="V100",
                  morphnet_regularizer_threshold=1e-2,
                  morphnet_regularization_strength=1e-9,
-                 log_dir="./morphnet_log"):
+                 log_dir="/content/drive/MyDrive/morphnet_log"):
         """
         Initialize MorphNetModel instance.
         Args:

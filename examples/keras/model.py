@@ -30,7 +30,7 @@ class MorphNetModel(object):
                  morphnet_hardware="V100",
                  morphnet_regularizer_threshold=1e-2,
                  morphnet_regularization_strength=1e-9,
-                 log_dir="./morphnet_log"):
+                 log_dir="/content/drive/MyDrive/morphnet_log"):
         """
         Initialize MorphNetModel instance.
         Args:

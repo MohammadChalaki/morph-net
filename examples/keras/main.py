@@ -10,6 +10,7 @@ Main script to start MorphNet training for selected models.
 
 import argparse
 import tensorflow as tf
+import numpy as np
 
 from model import MorphNetModel
 from utils import set_reproducible_environment, select_keras_base_model, train_epoch, validate_epoch
@@ -20,14 +21,14 @@ def main():
     parser = argparse.ArgumentParser(
         description="Run MorphNet Algorithm on Image Classification Model Zoo.")
 
-    num_epochs_default = 1000
-    num_classes_default = 10
+    num_epochs_default = 100
+    num_classes_default = 18
     batch_size_default = 1024
     base_model_name_default = "ResNet50"
     learning_rate_default = 0.0001
     morphnet_regularizer_algorithm_default = "GroupLasso"
     morphnet_target_cost_default = "FLOPs"
-    morphnet_hardware_default = "V100"
+    morphnet_hardware_default = "Others"
     morphnet_regularizer_threshold_default = 1e-2
     morphnet_regularization_multiplier_default = 1000.0
     log_dir_default = "./morphnet_log"
@@ -91,7 +92,9 @@ def main():
         "--morphnet-regularization-multiplier",
         type=float,
         help=
-        "Set MorphNet regularization multiplier for regularization strength. The regularization strength for training equals the regularization multiplier divided by the initial cost of the model. Set this value to zero turns of MorphNet regularization.",
+        "Set MorphNet regularization multiplier for regularization strength. The regularization strength for ..."
+        "training equals the regularization multiplier divided by the initial cost of the model. Set this value to ..."
+        "zero turns of MorphNet regularization.",
         default=morphnet_regularization_multiplier_default)
     parser.add_argument(
         "--log-dir",
@@ -136,8 +139,12 @@ def main():
 
     set_reproducible_environment(random_seed=random_seed)
 
-    (x_train, y_train), (x_valid,
-                         y_valid) = tf.keras.datasets.cifar10.load_data()
+    # (x_train, y_train), (x_valid, y_valid) = tf.keras.datasets.cifar10.load_data()
+    x_train = np.load('/content/drive/MyDrive/np/train.npy')
+    y_train = np.load('/content/drive/MyDrive/np/train_label.npy')
+    x_valid = np.load('/content/drive/MyDrive/np/validation.npy')
+    y_valid = np.load('/content/drive/MyDrive/np/validation_label.npy')
+
     # Convert class vectors to binary class matrices.
     y_train_onehot = tf.keras.utils.to_categorical(y_train, num_classes)
     y_valid_onehot = tf.keras.utils.to_categorical(y_valid, num_classes)

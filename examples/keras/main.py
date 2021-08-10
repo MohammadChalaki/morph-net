@@ -16,6 +16,38 @@ from model import MorphNetModel
 from utils import set_reproducible_environment, select_keras_base_model, train_epoch, validate_epoch
 
 
+def custom_model():
+    model = tf.keras.models.Sequential()
+    # add model layers
+    model.add(tf.keras.layers.Conv2D(64, kernel_size=(2, 2), input_shape=(20, 103, 4), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(64, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    # model.add(SpatialDropout2D(0.1))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(128, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(128, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    # model.add(Conv2D(128, kernel_size=(2, 2), padding="same"))
+    # model.add(Activation('relu'))
+    # model.add(SpatialDropout2D(0.1))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(256, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(256, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(256, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.SpatialDropout2D(0.1))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+
+    return model
+
+
 def main():
 
     parser = argparse.ArgumentParser(
@@ -34,7 +66,7 @@ def main():
     log_dir_default = "./morphnet_log"
     main_train_device_default = "/cpu:0"
     main_eval_device_default = "/gpu:0"
-    num_cuda_device_default = 4
+    num_cuda_device_default = 1
     random_seed_default = 0
     base_model_choices = [
         "ResNet50", "ResNet101", "ResNet152", "ResNet50V2", "ResNet101V2",
@@ -153,7 +185,8 @@ def main():
     x_train = x_train.astype("float32") / 255.0
     x_valid = x_valid.astype("float32") / 255.0
 
-    base_model = select_keras_base_model(base_model_name=base_model_name)
+    # base_model = select_keras_base_model(base_model_name=base_model_name)
+    base_model = custom_model
     morphnet_regularization_strength_dummy = 1e-9
     model = MorphNetModel(
         base_model=base_model,

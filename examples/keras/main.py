@@ -91,7 +91,9 @@ def main():
         "--morphnet-regularization-multiplier",
         type=float,
         help=
-        "Set MorphNet regularization multiplier for regularization strength. The regularization strength for training equals the regularization multiplier divided by the initial cost of the model. Set this value to zero turns of MorphNet regularization.",
+        "Set MorphNet regularization multiplier for regularization strength. The regularization strength for ..."
+        "training equals the regularization multiplier divided by the initial cost of the model. Set this value to ..."
+        "zero turns of MorphNet regularization.",
         default=morphnet_regularization_multiplier_default)
     parser.add_argument(
         "--log-dir",

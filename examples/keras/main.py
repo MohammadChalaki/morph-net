@@ -10,9 +10,42 @@ Main script to start MorphNet training for selected models.
 
 import argparse
 import tensorflow as tf
+import numpy as np
 
 from model import MorphNetModel
 from utils import set_reproducible_environment, select_keras_base_model, train_epoch, validate_epoch
+
+
+def custom_model():
+    model = tf.keras.models.Sequential()
+    # add model layers
+    model.add(tf.keras.layers.Conv2D(64, kernel_size=(2, 2), input_shape=(20, 103, 4), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(64, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    # model.add(SpatialDropout2D(0.1))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(128, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(128, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    # model.add(Conv2D(128, kernel_size=(2, 2), padding="same"))
+    # model.add(Activation('relu'))
+    # model.add(SpatialDropout2D(0.1))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(256, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(256, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.Conv2D(256, kernel_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+    model.add(tf.keras.layers.SpatialDropout2D(0.1))
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding="same"))
+    model.add(tf.keras.layers.Activation('relu'))
+
+    return model
 
 
 def main():
@@ -20,20 +53,20 @@ def main():
     parser = argparse.ArgumentParser(
         description="Run MorphNet Algorithm on Image Classification Model Zoo.")
 
-    num_epochs_default = 1000
-    num_classes_default = 10
+    num_epochs_default = 100
+    num_classes_default = 18
     batch_size_default = 1024
     base_model_name_default = "ResNet50"
     learning_rate_default = 0.0001
     morphnet_regularizer_algorithm_default = "GroupLasso"
     morphnet_target_cost_default = "FLOPs"
-    morphnet_hardware_default = "V100"
+    morphnet_hardware_default = "Others"
     morphnet_regularizer_threshold_default = 1e-2
     morphnet_regularization_multiplier_default = 1000.0
     log_dir_default = "./morphnet_log"
     main_train_device_default = "/cpu:0"
     main_eval_device_default = "/gpu:0"
-    num_cuda_device_default = 4
+    num_cuda_device_default = 1
     random_seed_default = 0
     base_model_choices = [
         "ResNet50", "ResNet101", "ResNet152", "ResNet50V2", "ResNet101V2",
@@ -138,8 +171,12 @@ def main():
 
     set_reproducible_environment(random_seed=random_seed)
 
-    (x_train, y_train), (x_valid,
-                         y_valid) = tf.keras.datasets.cifar10.load_data()
+    # (x_train, y_train), (x_valid, y_valid) = tf.keras.datasets.cifar10.load_data()
+    x_train = np.load('/content/drive/MyDrive/np/train.npy')
+    y_train = np.load('/content/drive/MyDrive/np/train_label.npy')
+    x_valid = np.load('/content/drive/MyDrive/np/validation.npy')
+    y_valid = np.load('/content/drive/MyDrive/np/validation_label.npy')
+
     # Convert class vectors to binary class matrices.
     y_train_onehot = tf.keras.utils.to_categorical(y_train, num_classes)
     y_valid_onehot = tf.keras.utils.to_categorical(y_valid, num_classes)
@@ -148,7 +185,8 @@ def main():
     x_train = x_train.astype("float32") / 255.0
     x_valid = x_valid.astype("float32") / 255.0
 
-    base_model = select_keras_base_model(base_model_name=base_model_name)
+    # base_model = select_keras_base_model(base_model_name=base_model_name)
+    base_model = custom_model
     morphnet_regularization_strength_dummy = 1e-9
     model = MorphNetModel(
         base_model=base_model,

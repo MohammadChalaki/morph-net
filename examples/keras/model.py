@@ -87,9 +87,7 @@ class MorphNetModel(object):
         """
         with tf.device(self.main_train_device):
 
-            base_model = self.base_model(weights=None,
-                                         include_top=False,
-                                         input_tensor=input_tensor)
+            base_model = self.base_model()
             x = base_model.output
             # Add a global spatial average pooling layer since MorphNet does not support Flatten/Reshape OPs.
             x = tf.keras.layers.GlobalAveragePooling2D()(x)

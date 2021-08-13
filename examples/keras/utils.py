@@ -76,7 +76,7 @@ def set_reproducible_environment(random_seed=None):
     """
     if random_seed is not None:
         np.random.seed(random_seed)
-        tf.set_random_seed(random_seed)
+        tf.random.set_seed()(random_seed)
 
 
 def validate_epoch(epoch, model, x_valid, y_valid_onehot, batch_size):

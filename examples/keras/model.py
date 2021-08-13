@@ -10,6 +10,7 @@ Implementation of MorphNetModel class.
 
 import os
 import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from datetime import datetime
 from morph_net.network_regularizers import flop_regularizer, latency_regularizer, model_size_regularizer
 from morph_net.tools import structure_exporter
@@ -17,6 +18,7 @@ from tensorflow.python.keras.layers import VersionAwareLayers
 from tensorflow.python.keras.engine import training
 from keras.initializers import glorot_uniform
 
+tf.disable_v2_behavior()
 
 layers = None
 
@@ -193,7 +195,7 @@ class MorphNetModel(object):
         """
         with tf.device(self.main_train_device):
 
-            base_model = resnet50()
+            base_model = resnet50(input_shape=(20, 103, 4))
             x = base_model.output
             # Add a global spatial average pooling layer since MorphNet does not support Flatten/Reshape OPs.
             x = tf.keras.layers.GlobalAveragePooling2D()(x)
@@ -203,10 +205,9 @@ class MorphNetModel(object):
             self.model = tf.keras.Model(inputs=base_model.input, outputs=logits)
 
             self.inputs = self.model.input
-            self.labels = tf.placeholder(tf.float32, [None, self.num_classes])
+            self.labels = tf.compat.v1.placeholder(tf.float32, [None, self.num_classes])
 
-            self.morphnet_regularization_strength_placeholder = tf.placeholder(
-                tf.float32, shape=[])
+            self.morphnet_regularization_strength_placeholder = tf.compat.v1.placeholder(tf.float32, shape=[])
 
     def initialize_morphnet(self, input_boundary, output_boundary,
                             morphnet_regularization_strength):
@@ -403,8 +404,7 @@ class MorphNetModel(object):
         with tf.device(self.main_eval_device):
 
             self.inputs_eval = self.model.input
-            self.labels_eval = tf.placeholder(tf.float32,
-                                              [None, self.num_classes])
+            self.labels_eval = tf.compat.v1.placeholder(tf.float32, [None, self.num_classes])
             self.logits_eval = self.model(self.inputs_eval)
             self.probs_eval = tf.nn.softmax(self.logits_eval)
             self.correct_pred_eval = tf.equal(tf.argmax(self.logits_eval, 1),

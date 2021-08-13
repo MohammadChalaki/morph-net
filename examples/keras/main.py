@@ -156,8 +156,8 @@ def main():
     y_valid = np.load('/content/drive/MyDrive/np/validation_label.npy')
 
     # Convert class vectors to binary class matrices.
-    y_train_onehot = tf.keras.utils.to_categorical(y_train, num_classes)
-    y_valid_onehot = tf.keras.utils.to_categorical(y_valid, num_classes)
+    # y_train_onehot = tf.keras.utils.to_categorical(y_train, num_classes)
+    # y_valid_onehot = tf.keras.utils.to_categorical(y_valid, num_classes)
     image_shape = x_train[1:]
     # Normalize image inputs
     # x_train = x_train.astype("float32") / 255.0
@@ -198,12 +198,12 @@ def main():
         validate_epoch(epoch=epoch,
                        model=model,
                        x_valid=x_valid,
-                       y_valid_onehot=y_valid_onehot,
+                       y_valid_onehot=y_valid,
                        batch_size=batch_size)
         train_epoch(epoch=epoch,
                     model=model,
                     x_train=x_train,
-                    y_train_onehot=y_train_onehot,
+                    y_train_onehot=y_train,
                     batch_size=batch_size,
                     shuffle=True,
                     print_batch_info=False)
@@ -213,7 +213,7 @@ def main():
     validate_epoch(epoch=num_epochs,
                    model=model,
                    x_valid=x_valid,
-                   y_valid_onehot=y_valid_onehot,
+                   y_valid_onehot=y_valid,
                    batch_size=batch_size)
 
     model.close()

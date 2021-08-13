@@ -21,7 +21,7 @@ from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping,ModelCheckpoint
 from google.colab.patches import cv2_imshow
 from keras.preprocessing import image
-from model import resnet50
+from model import custom_model
 from model import MorphNetModel
 from utils import set_reproducible_environment, select_keras_base_model, train_epoch, validate_epoch
 
@@ -164,7 +164,7 @@ def main():
     # x_valid = x_valid.astype("float32") / 255.0
 
     # base_model = select_keras_base_model(base_model_name=base_model_name)
-    base_model = resnet50()
+    base_model = custom_model()
     morphnet_regularization_strength_dummy = 1e-9
     model = MorphNetModel(
         base_model=base_model,

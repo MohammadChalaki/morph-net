@@ -123,6 +123,42 @@ def resnet50(input_shape=(224, 224, 3)):
     return model
 
 
+def custom_model(input_shape=(224, 224, 3)):
+    global layers
+    layers = VersionAwareLayers()
+
+    x_input = layers.Input(input_shape)
+
+    x = layers.Conv2D(64, kernel_size=(2, 2), padding="same", name='conv_1')(x_input)
+    x = layers.Activation('relu', name='active_1')(x)
+    x = layers.Conv2D(64, kernel_size=(2, 2), padding="same", name='conv_2')(x)
+    x = layers.Activation('relu', name='active_2')(x)
+    x = layers.MaxPooling2D(pool_size=(2, 2), padding="same", name='pool_1')(x)
+    x = layers.Activation('relu', name='active_3')(x)
+    x = layers.Conv2D(128, kernel_size=(2, 2), padding="same", name='conv_3')(x)
+    x = layers.Activation('relu', name='active_4')(x)
+    x = layers.Conv2D(128, kernel_size=(2, 2), padding="same", name='conv_4')(x)
+    x = layers.Activation('relu', name='active_5')(x)
+    x = layers.MaxPooling2D(pool_size=(2, 2), padding="same", name='pool_2')(x)
+    x = layers.Activation('relu', name='active_6')(x)
+    x = layers.Conv2D(256, kernel_size=(2, 2), padding="same", name='conv_5')(x)
+    x = layers.Activation('relu', name='active_7')(x)
+    x = layers.Conv2D(256, kernel_size=(2, 2), padding="same", name='conv_6')(x)
+    x = layers.Activation('relu', name='active_8')(x)
+    x = layers.Conv2D(256, kernel_size=(2, 2), padding="same", name='conv_7')(x)
+    x = layers.Activation('relu', name='active_9')(x)
+    x = layers.SpatialDropout2D(0.1, name='drop_1')(x)
+    x = layers.MaxPooling2D(pool_size=(2, 2), padding="same", name='pool_3')(x)
+
+    x = layers.AveragePooling2D(pool_size=(2, 2), padding='same')(x)
+
+    model = training.Model(inputs=x_input, outputs=x, name='CustomModel')
+    model.load_weights('/content/drive/MyDrive/Project/Models/Location Classification/weight_test.h5',
+                       skip_mismatch=True, by_name=True)
+
+    return model
+
+
 class MorphNetModel(object):
 
     def __init__(self,
@@ -195,7 +231,7 @@ class MorphNetModel(object):
         """
         with tf.device(self.main_train_device):
 
-            base_model = resnet50(input_shape=(20, 103, 4))
+            base_model = custom_model(input_shape=(20, 103, 4))
             x = base_model.output
             # Add a global spatial average pooling layer since MorphNet does not support Flatten/Reshape OPs.
             x = tf.keras.layers.GlobalAveragePooling2D()(x)

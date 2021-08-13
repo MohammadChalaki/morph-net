@@ -13,6 +13,112 @@ import tensorflow as tf
 from datetime import datetime
 from morph_net.network_regularizers import flop_regularizer, latency_regularizer, model_size_regularizer
 from morph_net.tools import structure_exporter
+from tensorflow.python.keras.layers import VersionAwareLayers
+from tensorflow.python.keras.engine import training
+from keras.initializers import glorot_uniform
+
+
+layers = None
+
+
+def identity_block(x, f, filters, stage, block):
+    conv_name_base = 'res' + str(stage) + block + '_branch'
+    bn_name_base = 'bn' + str(stage) + block + '_branch'
+    F1, F2, F3 = filters
+
+    x_shortcut = x
+
+    x = layers.Conv2D(filters=F1, kernel_size=(1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2a',
+                      kernel_initializer=glorot_uniform(seed=0))(x)
+    x = layers.BatchNormalization(axis=3, name=bn_name_base + '2a')(x)
+    x = layers.Activation('relu')(x)
+
+    x = layers.Conv2D(filters=F2, kernel_size=(f, f), strides=(1, 1), padding='same', name=conv_name_base + '2b',
+                      kernel_initializer=glorot_uniform(seed=0))(x)
+    x = layers.BatchNormalization(axis=3, name=bn_name_base + '2b')(x)
+    x = layers.Activation('relu')(x)
+
+    x = layers.Conv2D(filters=F3, kernel_size=(1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2c',
+                      kernel_initializer=glorot_uniform(seed=0))(x)
+    x = layers.BatchNormalization(axis=3, name=bn_name_base + '2c')(x)
+
+    x = layers.Add()([x, x_shortcut])  # SKIP Connection
+    x = layers.Activation('relu')(x)
+
+    return x
+
+
+def convolutional_block(x, f, filters, stage, block, s=2):
+    conv_name_base = 'res' + str(stage) + block + '_branch'
+    bn_name_base = 'bn' + str(stage) + block + '_branch'
+
+    F1, F2, F3 = filters
+
+    x_shortcut = x
+
+    x = layers.Conv2D(filters=F1, kernel_size=(1, 1), strides=(s, s), padding='valid', name=conv_name_base + '2a',
+                      kernel_initializer=glorot_uniform(seed=0))(x)
+    x = layers.BatchNormalization(axis=3, name=bn_name_base + '2a')(x)
+    x = layers.Activation('relu')(x)
+
+    x = layers.Conv2D(filters=F2, kernel_size=(f, f), strides=(1, 1), padding='same', name=conv_name_base + '2b',
+                      kernel_initializer=glorot_uniform(seed=0))(x)
+    x = layers.BatchNormalization(axis=3, name=bn_name_base + '2b')(x)
+    x = layers.Activation('relu')(x)
+
+    x = layers.Conv2D(filters=F3, kernel_size=(1, 1), strides=(1, 1), padding='valid', name=conv_name_base + '2c',
+                      kernel_initializer=glorot_uniform(seed=0))(x)
+    x = layers.BatchNormalization(axis=3, name=bn_name_base + '2c')(x)
+
+    x_shortcut = layers.Conv2D(filters=F3, kernel_size=(1, 1), strides=(s, s), padding='valid', name=conv_name_base +
+                               '1', kernel_initializer=glorot_uniform(seed=0))(x_shortcut)
+    x_shortcut = layers.BatchNormalization(axis=3, name=bn_name_base + '1')(x_shortcut)
+
+    x = layers.Add()([x, x_shortcut])
+    x = layers.Activation('relu')(x)
+
+    return x
+
+
+def resnet50(input_shape=(224, 224, 3)):
+    global layers
+    layers = VersionAwareLayers()
+
+    x_input = layers.Input(input_shape)
+
+    x = layers.ZeroPadding2D((3, 3))(x_input)
+    x = layers.Conv2D(64, (7, 7), strides=(2, 2), name='conv1', kernel_initializer=glorot_uniform(seed=0))(x)
+    x = layers.BatchNormalization(axis=3, epsilon=1.001e-5, name='bn_conv1')(x)
+    x = layers.Activation('relu')(x)
+    x = layers.MaxPooling2D((3, 3), strides=(2, 2))(x)
+
+    x = convolutional_block(x, f=3, filters=[64, 64, 256], stage=2, block='a', s=1)
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='b')
+    x = identity_block(x, 3, [64, 64, 256], stage=2, block='c')
+
+    x = convolutional_block(x, f=3, filters=[128, 128, 512], stage=3, block='a', s=2)
+    x = identity_block(x, 3, [128, 128, 512], stage=3, block='b')
+    x = identity_block(x, 3, [128, 128, 512], stage=3, block='c')
+    x = identity_block(x, 3, [128, 128, 512], stage=3, block='d')
+
+    x = convolutional_block(x, f=3, filters=[256, 256, 1024], stage=4, block='a', s=2)
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='b')
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='c')
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='d')
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='e')
+    x = identity_block(x, 3, [256, 256, 1024], stage=4, block='f')
+
+    x = convolutional_block(x, f=3, filters=[512, 512, 2048], stage=5, block='a', s=2)
+    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='b')
+    x = identity_block(x, 3, [512, 512, 2048], stage=5, block='c')
+
+    x = layers.AveragePooling2D(pool_size=(2, 2), padding='same')(x)
+
+    model = training.Model(inputs=x_input, outputs=x, name='ResNet50')
+    model.load_weights("/content/drive/MyDrive/Project/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5",
+                       skip_mismatch=True, by_name=True)
+
+    return model
 
 
 class MorphNetModel(object):
@@ -87,7 +193,7 @@ class MorphNetModel(object):
         """
         with tf.device(self.main_train_device):
 
-            base_model = self.base_model()
+            base_model = resnet50()
             x = base_model.output
             # Add a global spatial average pooling layer since MorphNet does not support Flatten/Reshape OPs.
             x = tf.keras.layers.GlobalAveragePooling2D()(x)
